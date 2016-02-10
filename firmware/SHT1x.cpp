@@ -76,9 +76,9 @@ float SHT1x::readHumidity()
     float _temperature;          // Raw temperature value
     
     // Conversion coefficients from SHT15 datasheet
-    const float C1 = -4.0;       // for 12 Bit
-    const float C2 =  0.0405;    // for 12 Bit
-    const float C3 = -0.0000028; // for 12 Bit
+    const float X1 = -4.0;       // for 12 Bit
+    const float X2 =  0.0405;    // for 12 Bit
+    const float X3 = -0.0000028; // for 12 Bit
     const float T1 =  0.01;      // for 14 Bit @ 5V
     const float T2 =  0.00008;   // for 14 Bit @ 5V
     
@@ -92,7 +92,7 @@ float SHT1x::readHumidity()
     skipCrcSHT(_dataPin, _clockPin);
     
     // Apply linear conversion to raw value
-    _linearHumidity = C1 + C2 * _val + C3 * _val * _val;
+    _linearHumidity = X1 + X2 * _val + X3 * _val * _val;
     
     // Get current temperature for humidity correction
     _temperature = readTemperatureC();
