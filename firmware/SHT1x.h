@@ -8,32 +8,57 @@
  *
  * Manages communication with SHT1x series (SHT10, SHT11, SHT15)
  * temperature / humidity sensors from Sensirion (www.sensirion.com).
- *
- * Ported to Spark Core by Anurag Chugh (https://github.com/lithiumhead) on 2014-10-15
  */
 #ifndef SHT1x_h
 #define SHT1x_h
 
 #include "application.h"
-#include "math.h"
+
+#define TIMEOUT_MILLIS 1000
+
+enum {
+  SHT1X_CMD_MEASURE_TEMP  = 0x03,
+  SHT1X_CMD_MEASURE_RH    = 0x05,
+  SHT1X_CMD_READ_STATUS   = 0x07,
+  SHT1X_CMD_SOFT_RESET    = 0x1E
+};
 
 class SHT1x
 {
-    public:
-        SHT1x(int dataPin, int clockPin);
-        float readHumidity();
-        float readTemperatureC();
-        float readTemperatureF();
-    private:
-        int _dataPin;
-        int _clockPin;
-        int _numBits;
-        float readTemperatureRaw();
-        int shiftIn(int _dataPin, int _clockPin, int _numBits);
-        void sendCommandSHT(int _command, int _dataPin, int _clockPin);
-        void waitForResultSHT(int _dataPin);
-        int getData16SHT(int _dataPin, int _clockPin);
-        void skipCrcSHT(int _dataPin, int _clockPin);
+  public:
+    SHT1x(int dataPin, int clockPin);
+    SHT1x(int dataPin, int clockPin, float voltage, bool intPullup=false);
+    void reset();
+    //composite functions
+    float readHumidity();
+    float readTemperatureC();
+    float readTemperatureF();
+    uint8_t readStatus();
+    //decoupled functions
+    void requestTemperature();
+    int readInTemperature();
+    void requestHumidity();
+    float readInHumidity();
+    float parseHumidity(int raw);
+    float parseTemperatureC(int raw);
+    float parseTemperatureF(int raw);
+  private:
+    int _temperatureRaw;
+    int _dataPin;
+    int _clockPin;
+    PinMode _dataInputMode;
+    uint8_t _status;
+    int _numBits;
+    float _D1C; float _D1F; float _D2C; float _D2F;
+    float _linearInterpolation(float coeffA, float coeffB, float valB, float input);
+    void _setConversionCoeffs(float voltage);
+
+    void sendCommandSHT(uint8_t _command);
+    void waitForResultSHT();
+    int getDataSHT(int bits);
+    void skipCrcSHT();
+    bool checkCrcSHT(uint8_t cmd, uint16_t data, int datalen);
+    uint8_t crc8(uint8_t data, uint8_t startval);
 };
 
 #endif
